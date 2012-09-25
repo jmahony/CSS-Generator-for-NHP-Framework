@@ -25,6 +25,16 @@ function generate_styles() {
 			'selectorType' => '.',
 			'selector'     => 'testing2',
 			'property'     => 'color'
+		),
+		'2a' => array(
+			'selectorType' => '',
+			'selector'     => 'body',
+			'property'     => 'background-image'
+		),
+		'2b' => array(
+			'selectorType' => '',
+			'selector'     => 'body',
+			'property'     => 'background-repeat'
 		)
 	);
 
@@ -175,7 +185,7 @@ class CssAttribute {
 	 * @param selectorType, selector
 	 * @author 
 	 **/
-	function __construct($selectorType = '.', $selector = null) {
+	function __construct($selectorType = '', $selector = null) {
 		$this->selector     = $selector;
 		$this->selectorType = $selectorType;
 		$this->properties   = array();
@@ -208,7 +218,13 @@ class CssAttribute {
 		$attribute .= $this->selectorType . $this->selector . '{';
 
 		foreach ($this->properties as $property => $value) {
-			$attribute .= $property . ':' . $value . ';';
+			$attribute .= $property . ':';
+
+			if ($this->isURL($value)) {
+				$attribute .= 'url(' . $value . ');';
+			} else {
+				$attribute .= $value . ';';
+			}
 		}
 
 		$attribute .= '}';
@@ -229,8 +245,15 @@ class CssAttribute {
 		$this->properties = array_merge($this->properties, $properties);
 	}
 
+	public function isURL($url = false) {
+		if (strpos($url, 'http') > -1) {
+			return true;
+		}
+		return false;
+	}
+
 	/**
-	 * getProperty
+	 * getProperties
 	 * 
 	 * Returns the properties array
 	 * 
