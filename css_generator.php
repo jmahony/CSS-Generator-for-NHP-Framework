@@ -82,7 +82,6 @@ class CssStyleSheet {
 	 * toString method of each attribute object
 	 * 
 	 * @return String
-	 * @author 
 	 **/
 	public function toString() {
 		$css = '';
@@ -106,7 +105,6 @@ class CssStyleSheet {
 	 * 
 	 * @return void
 	 * @param CssAttribute object
-	 * @author 
 	 **/
 	public function addAttribute(CssAttribute $CssAttribute) {
 		$selector = $CssAttribute->getSelector();
@@ -124,10 +122,9 @@ class CssStyleSheet {
 	 * Checks if selector already exists in the attributes array
 	 * 
 	 * @return Boolean
-	 * @param selector String
-	 * @author 
+	 * @param selector
 	 **/
-	private function hasAttribute($selector) {
+	private function hasAttribute($selector = '') {
 		return array_key_exists($selector, $this->attributes);
 	}
 } // END class 
@@ -182,10 +179,10 @@ class CssAttribute {
 	 * Assign the selector type and selector for the attribute
 	 *
 	 * @return void
-	 * @param selectorType, selector
-	 * @author 
+	 * @param selectorType
+	 * @param selector
 	 **/
-	function __construct($selectorType = '', $selector = null) {
+	function __construct($selectorType = '', $selector = '') {
 		$this->selector     = $selector;
 		$this->selectorType = $selectorType;
 		$this->properties   = array();
@@ -198,10 +195,10 @@ class CssAttribute {
 	 * addProperty('color','red')
 	 *
 	 * @return void
-	 * @param type, value
-	 * @author 
+	 * @param type
+	 * @param value
 	 **/
-	public function addProperty($type = null, $value = null){
+	public function addProperty($type = '', $value = ''){
 		$this->properties[$type] = $value;
 	}
 
@@ -211,7 +208,6 @@ class CssAttribute {
 	 * Converts the properties to a printable string
 	 * 
 	 * @return String
-	 * @author 
 	 **/
 	public function toString() {
 		$attribute = '';
@@ -238,14 +234,22 @@ class CssAttribute {
 	 * Merges supplied CssAttribute with itself
 	 * 
 	 * @return String
-	 * @author 
+	 * @param CssAttribute object
 	 **/
 	public function merge(CssAttribute $CssAttribute) {
 		$properties = $CssAttribute->getProperties();
 		$this->properties = array_merge($this->properties, $properties);
 	}
 
-	public function isURL($url = false) {
+	/**
+	 * isURL
+	 * 
+	 * Retruns whether or not a string is a URL
+	 * 
+	 * @param url
+	 * @return Boolean
+	 **/
+	public function isURL($url = '') {
 		if (strpos($url, 'http') > -1) {
 			return true;
 		}
@@ -258,7 +262,6 @@ class CssAttribute {
 	 * Returns the properties array
 	 * 
 	 * @return Array
-	 * @author 
 	 **/
 	private function getProperties() {
 		return $this->properties;
@@ -270,7 +273,6 @@ class CssAttribute {
 	 * Returns the selector string
 	 * 
 	 * @return String
-	 * @author 
 	 **/
 	public function getSelector() {
 		return $this->selector;
