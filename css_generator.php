@@ -1,54 +1,21 @@
 <?php
 
-add_action('wp_head', 'generate_styles');
+function generate_styles($styleIndex = null) {
 
-function generate_styles() {
-	$options = get_option('themed');
-
-	$styleIndex = array(
-		'0a' => array(
-			'selectorType' => '.',
-			'selector'     => 'testing',
-			'property'     => 'background-color'
-		),
-		'0b' => array(
-			'selectorType' => '.',
-			'selector'     => 'testing',
-			'property'     => 'color'
-		),
-		'1a' => array(
-			'selectorType' => '.',
-			'selector'     => 'testing2',
-			'property'     => 'background-color'
-		),
-		'1b' => array(
-			'selectorType' => '.',
-			'selector'     => 'testing2',
-			'property'     => 'color'
-		),
-		'2a' => array(
-			'selectorType' => '',
-			'selector'     => 'body',
-			'property'     => 'background-image'
-		),
-		'2b' => array(
-			'selectorType' => '',
-			'selector'     => 'body',
-			'property'     => 'background-repeat'
-		)
-	);
+	$options = get_option();
 
 	$Stylesheet = new CssStyleSheet();
 
-	foreach($options as $key => $value) {
-		if (array_key_exists($key, $styleIndex)) {
-			$CssAttribute = new CssAttribute($styleIndex[$key]['selectorType'], $styleIndex[$key]['selector']);
-			$CssAttribute->addProperty($styleIndex[$key]['property'], $value);
+	foreach ($styleIndex as $style) {
+		if (array_key_exists($style['option_id'], $options)) {
+			$CssAttribute = new CssAttribute($style['selector']);
+			$CssAttribute->addProperty($style['property'], $options[$style['option_id']]);
 			$Stylesheet->addAttribute($CssAttribute);
 		}
 	}
 
-	echo $Stylesheet->toString();
+	echo $Stylesheet->toString(true); // pass true to compress output
+
 }
 
 /**
@@ -83,17 +50,21 @@ class CssStyleSheet {
 	 * 
 	 * @return String
 	 **/
-	public function toString() {
-		$css = '';
-		$css = '<style type="text/css" media="screen">';
+	public function toString($compression = false) {
+		
+		$header = '<style type="text/css">';
+		$css    = '';
+		$footer = '</style>';
 
 		foreach ($this->attributes as $attribute) {
 			$css .= $attribute->toString();
 		}
 
-		$css .= '</style>';
+		if ($compression) {
+			$css = $this->compress($css);
+		}
 
-		return $css;
+		return $header . $css . $footer;
 	}
 
 	/**
@@ -108,7 +79,6 @@ class CssStyleSheet {
 	 **/
 	public function addAttribute(CssAttribute $CssAttribute) {
 		$selector = $CssAttribute->getSelector();
-
 		if ($this->hasAttribute($selector)) {
 			$this->attributes[$selector]->merge($CssAttribute);
 		} else {
@@ -127,15 +97,29 @@ class CssStyleSheet {
 	private function hasAttribute($selector = '') {
 		return array_key_exists($selector, $this->attributes);
 	}
+	
+	/**
+	 * compress
+	 *
+	 * @param String css
+	 * @return String
+	 * @author 
+	 **/
+	private function compress($css = '') {
+		$css = preg_replace('/\\n+|\\t+/', '', $css);
+
+		return $css;
+	}
 } // END class 
 
 /**
  * CssAttribute
  * 
- * Stores the selector, selectorType and properties of a CSS attribute
+ * Stores the selector and properties of a CSS attribute
  *
  * @package default
- * @author 
+ * @author Josh Mahony (Republique Design)
+ * @
  **/
 class CssAttribute {
 	
@@ -150,21 +134,12 @@ class CssAttribute {
 	private $selector;
 
 	/**
-	 * selectorType
-	 *
-	 * Holds the selector type part of the CSS attribute,
-	 * e.g. the '.'' part of .heading { }
-	 *
-	 * @var String
-	 **/
-	private $selectorType;
-
-	/**
 	 * properties
-	 *
+	 * 
+	 * 
 	 * Holds the properties part of the CSS attribute,
 	 * e.g. anything between { } part of .heading { }
-	 * Example of array format
+	 * @example
 	 * array(
 	 * 		'color' => 'red'
 	 * );
@@ -179,13 +154,11 @@ class CssAttribute {
 	 * Assign the selector type and selector for the attribute
 	 *
 	 * @return void
-	 * @param selectorType
 	 * @param selector
 	 **/
-	function __construct($selectorType = '', $selector = '') {
-		$this->selector     = $selector;
-		$this->selectorType = $selectorType;
-		$this->properties   = array();
+	function __construct($selector = '') {
+		$this->selector   = $selector;
+		$this->properties = array();
 	}
 
 	/**
@@ -210,16 +183,19 @@ class CssAttribute {
 	 * @return String
 	 **/
 	public function toString() {
-		$attribute = '';
-		$attribute .= $this->selectorType . $this->selector . '{';
+		$attribute  = '';
+		$attribute .= $this->selector . '{';
 
 		foreach ($this->properties as $property => $value) {
-			$attribute .= $property . ':';
 
-			if ($this->isURL($value)) {
-				$attribute .= 'url(' . $value . ');';
-			} else {
-				$attribute .= $value . ';';
+			if ($value != null) {
+				$attribute .= $property . ':';
+
+				if ($this->isURL($value)) {
+					$attribute .= 'url("' . $value . '");';
+				} else {
+					$attribute .= $value . ';';
+				}
 			}
 		}
 
